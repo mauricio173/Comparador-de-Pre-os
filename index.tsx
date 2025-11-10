@@ -399,3 +399,4 @@ Se, após sua busca rigorosa, você não encontrar nenhuma oferta que cumpra TOD
     renderComparisonList();
     renderSavedList();
 });
+
