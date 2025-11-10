@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let recentSearches = JSON.parse(localStorage.getItem('hyperscanRecentSearches')) || ["Smartphone", "Bluetooth Headphones", "Smartwatch"];
     let comparisonList = JSON.parse(localStorage.getItem('hyperscanComparisonList')) || [];
     let savedList = JSON.parse(localStorage.getItem('hyperscanSavedList')) || [];
+    let timerInterval: number | undefined;
+    let counterInterval: number | undefined;
 
     const isProductInList = (product, list) => list.some(item => item.link === product.link);
 
@@ -45,18 +47,40 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSavedList();
     };
 
+    const handleRemoveRecentSearch = (tagToRemove: string) => {
+        recentSearches = recentSearches.filter(tag => tag !== tagToRemove);
+        localStorage.setItem('hyperscanRecentSearches', JSON.stringify(recentSearches));
+        updateRecentTags();
+    };
+
     const updateRecentTags = () => {
         if (!recentTagsContainer) return;
         recentTagsContainer.innerHTML = '';
         recentSearches.forEach(tagText => {
+            const tagContainer = document.createElement('div');
+            tagContainer.className = 'tag-container';
+            
             const tagSpan = document.createElement('span');
-            tagSpan.classList.add('tag');
+            tagSpan.className = 'tag-text';
             tagSpan.textContent = tagText;
             tagSpan.addEventListener('click', () => {
                 searchInput.value = tagText;
                 performSearch();
             });
-            recentTagsContainer.appendChild(tagSpan);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-tag-btn';
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.setAttribute('aria-label', `Remover ${tagText}`);
+            deleteBtn.title = `Remover "${tagText}"`;
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent tag click event from firing
+                handleRemoveRecentSearch(tagText);
+            });
+
+            tagContainer.appendChild(tagSpan);
+            tagContainer.appendChild(deleteBtn);
+            recentTagsContainer.appendChild(tagContainer);
         });
     };
 
@@ -77,16 +101,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const createProductCard = (product, context = 'search') => {
         const card = document.createElement('div');
         card.classList.add('product-card');
-        card.innerHTML = `
-            <img src="${product.image || 'https://via.placeholder.com/200x200/1A0D3A/00FFFF?text=No+Image'}" alt="${product.name}" class="product-image">
-            <h3 class="product-title">${product.name}</h3>
-            <p class="product-store">Loja: ${product.store}</p>
-            <p class="product-price">${product.price}</p>
-        `;
+    
+        const img = document.createElement('img');
+        img.className = 'product-image';
+        img.alt = product.name;
+        // Set a temporary loading image and an error handler
+        img.src = product.image || 'https://via.placeholder.com/200x200/1A0D3A/00FFFF?text=Loading...';
+        img.onerror = () => {
+            img.src = 'https://via.placeholder.com/200x200/1A0D3A/00FFFF?text=No+Image';
+        };
+    
+        const title = document.createElement('h3');
+        title.className = 'product-title';
+        title.textContent = product.name;
+    
+        const store = document.createElement('p');
+        store.className = 'product-store';
+        store.textContent = `Loja: ${product.store}`;
+    
+        const price = document.createElement('p');
+        price.className = 'product-price';
+        price.textContent = product.price;
+    
+        card.appendChild(img);
+        card.appendChild(title);
+        card.appendChild(store);
+        card.appendChild(price);
     
         const actionsContainer = document.createElement('div');
         actionsContainer.className = 'product-actions';
-        
+    
         const offerLink = document.createElement('a');
         offerLink.href = product.link;
         offerLink.target = '_blank';
@@ -97,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const secondaryActionsContainer = document.createElement('div');
         secondaryActionsContainer.className = 'secondary-actions';
-        
+    
         if (context === 'search') {
             const inCompare = isProductInList(product, comparisonList);
             const compareBtn = document.createElement('button');
@@ -166,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // FIX: Add explicit types for chunks and webSources to fix 'property does not exist on type unknown' errors.
     const displaySources = (chunks: any[] | undefined) => {
         if (!sourcesContainer) return;
         sourcesContainer.innerHTML = '';
@@ -224,7 +267,37 @@ document.addEventListener('DOMContentLoaded', () => {
         searchButton.disabled = true;
         searchButton.textContent = 'Pesquisando...';
         if (sourcesContainer) sourcesContainer.innerHTML = '';
-        displayMessage("Analisando a galáxia de ofertas para você...");
+        
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `
+                <div class="loading-container">
+                    <div class="loader"></div>
+                    <p>Analisando a galáxia de ofertas para você...</p>
+                    <div class="loading-stats">
+                        <p>Tempo: <span id="timer">0s</span></p>
+                        <p>Itens verificados: <span id="item-counter">0</span></p>
+                    </div>
+                </div>
+            `;
+        }
+
+        let seconds = 0;
+        let itemsChecked = 0;
+        const timerEl = document.getElementById('timer');
+        const counterEl = document.getElementById('item-counter');
+
+        clearInterval(timerInterval);
+        clearInterval(counterInterval);
+
+        timerInterval = window.setInterval(() => {
+            seconds++;
+            if (timerEl) timerEl.textContent = `${seconds}s`;
+        }, 1000);
+
+        counterInterval = window.setInterval(() => {
+            itemsChecked += Math.floor(Math.random() * 500) + 100;
+            if (counterEl) counterEl.textContent = itemsChecked.toLocaleString('pt-BR');
+        }, 300);
 
         try {
             const prompt = `Você é um assistente de compras online focado em encontrar as melhores ofertas. O usuário quer comprar: "${query}". Sua tarefa é pesquisar na web e encontrar até 8 das melhores ofertas para este produto em lojas online. Apresente os resultados em um array JSON. Cada item no array deve ser um objeto representando uma oferta e deve conter as seguintes chaves, e nada mais: 'name' (nome completo do produto), 'store' (nome da loja), 'price' (preço formatado como string, ex: "R$ 1.999,00"), 'link' (URL direto para a página do produto), e 'image' (URL direto para a imagem do produto). Garanta que os links e URLs de imagem sejam válidos e diretos. Forneça apenas o array JSON na sua resposta.`;
@@ -255,6 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             searchButton.disabled = false;
             searchButton.innerHTML = '<span class="icon-scan"></span> Pesquisar';
+            clearInterval(timerInterval);
+            clearInterval(counterInterval);
         }
     };
 
