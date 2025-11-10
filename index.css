@@ -221,53 +221,6 @@ body {
     mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>') no-repeat center / contain;
 }
 
-/* Search Filters */
-.search-filters {
-    margin: 25px auto 0;
-    max-width: 800px;
-    text-align: center;
-}
-
-.search-filters h4 {
-    color: var(--text-muted);
-    font-weight: 400;
-    margin-bottom: 15px;
-    font-size: 1em;
-}
-
-.filter-options {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-}
-
-.filter-label input[type="checkbox"] {
-    display: none;
-}
-
-.filter-label span {
-    padding: 8px 18px;
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9em;
-    background-color: var(--card-bg);
-}
-
-.filter-label input[type="checkbox"]:checked + span {
-    background-color: var(--primary-color);
-    color: var(--secondary-color);
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-}
-
-.filter-label span:hover {
-    background-color: var(--border-color);
-    transform: translateY(-2px);
-}
-
 .recent-searches {
     margin-top: 50px;
 }
