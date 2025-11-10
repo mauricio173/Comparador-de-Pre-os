@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let savedList = JSON.parse(localStorage.getItem('hyperscanSavedList')) || [];
     let timerInterval: number | undefined;
     let counterInterval: number | undefined;
+    let abortSearch = () => {};
 
     const isProductInList = (product, list) => list.some(item => item.link === product.link);
 
@@ -64,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tagSpan.className = 'tag-text';
             tagSpan.textContent = tagText;
             tagSpan.addEventListener('click', () => {
+                if (searchButton.classList.contains('cancel-mode')) return;
                 searchInput.value = tagText;
                 performSearch();
             });
@@ -262,10 +264,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const query = searchInput.value.trim();
         if (!query) return;
         
+        let isCancelled = false;
+        abortSearch = () => {
+            isCancelled = true;
+            searchButton.classList.remove('cancel-mode');
+            searchButton.innerHTML = '<span class="icon-scan"></span> Pesquisar';
+            searchButton.disabled = false;
+            clearInterval(timerInterval);
+            clearInterval(counterInterval);
+            displayMessage("Busca cancelada.");
+        };
+
         addRecentSearch(query);
 
-        searchButton.disabled = true;
-        searchButton.textContent = 'Pesquisando...';
+        searchButton.disabled = false;
+        searchButton.classList.add('cancel-mode');
+        searchButton.textContent = 'Cancelar';
         if (sourcesContainer) sourcesContainer.innerHTML = '';
         
         if (resultsContainer) {
@@ -309,10 +323,10 @@ Sua tarefa: Encontrar até 8 das melhores ofertas para este produto em toda a in
 Regras Críticas (Siga OBRIGATORIAMENTE):
 1.  **Precisão Absoluta do Produto:** Os resultados devem corresponder *EXATAMENTE* ao produto "${query}". Ignore completamente produtos similares, acessórios, ou itens de cores/capacidades diferentes, a menos que especificado. A precisão é fundamental.
 2.  **Validação Rigorosa de Links:** A sua maior prioridade é a validade do link. Cada 'link' DEVE ser uma URL ativa, funcional, e que leve DIRETAMENTE à página de compra do produto correto. Não pode ser uma página de busca geral, uma categoria, ou um produto esgotado. Se o link estiver quebrado ou incorreto, descarte a oferta imediatamente.
-3.  **Validação da Imagem:** O 'image' deve ser uma URL direta e válida para a imagem do produto, extraída da página da oferta. A imagem deve corresponder exatamente ao produto. Se não conseguir uma imagem válida, descarte a oferta.
-4.  **Formato de Saída:** Apresente os resultados em um único array JSON. Cada item no array é um objeto de oferta e deve conter APENAS as seguintes chaves: 'name' (nome completo do produto), 'store' (nome da loja), 'price' (preço formatado como string, ex: "R$ 9.999,00"), 'link' (a URL direta e validada do produto), e 'image' (a URL direta e validada da imagem).
+3.  **Obtenção da Imagem (Opcional, mas preferível):** Tente extrair uma URL direta e válida para a imagem do produto da página da oferta. A imagem deve corresponder ao produto. Se uma imagem clara e válida não puder ser encontrada, você PODE e DEVE retornar a oferta mesmo assim, mas com o valor da chave 'image' como uma string vazia (""). A falta de uma imagem NÃO é motivo para descartar uma oferta se o produto e o link estiverem corretos.
+4.  **Formato de Saída:** Apresente os resultados em um único array JSON. Cada item no array é um objeto de oferta e deve conter APENAS as seguintes chaves: 'name' (nome completo do produto), 'store' (nome da loja), 'price' (preço formatado como string, ex: "R$ 9.999,00"), 'link' (a URL direta e validada do produto), e 'image' (a URL da imagem ou uma string vazia).
 
-Se, após sua busca rigorosa, você não encontrar nenhuma oferta que cumpra TODAS estas regras, retorne um array JSON vazio: []. Não invente resultados.`;
+Se, após sua busca rigorosa, você não encontrar nenhuma oferta que cumpra as regras de precisão do produto e validação de link, retorne um array JSON vazio: []. Não invente resultados.`;
             
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
@@ -322,36 +336,50 @@ Se, após sua busca rigorosa, você não encontrar nenhuma oferta que cumpra TOD
                 },
             });
 
+            if (isCancelled) return;
+
             const text = response.text;
             const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
             
             const jsonMatch = text.match(/\[[\s\S]*\]/);
             if (!jsonMatch) {
-                // If no JSON is found, it could be because the model found nothing and returned text.
-                // We'll treat this as no results.
+                if (isCancelled) return;
                 displayResults([]);
                 displaySources(groundingChunks);
                 return; 
             }
+            
+            if (isCancelled) return;
             
             const products = JSON.parse(jsonMatch[0]);
             displayResults(products);
             displaySources(groundingChunks);
 
         } catch (error) {
+            if (isCancelled) return;
             console.error("Erro na busca:", error);
             displayMessage("Ocorreu um erro ao buscar as ofertas. Por favor, tente novamente.", true);
         } finally {
-            searchButton.disabled = false;
-            searchButton.innerHTML = '<span class="icon-scan"></span> Pesquisar';
-            clearInterval(timerInterval);
-            clearInterval(counterInterval);
+            if (!isCancelled) {
+                searchButton.disabled = false;
+                searchButton.classList.remove('cancel-mode');
+                searchButton.innerHTML = '<span class="icon-scan"></span> Pesquisar';
+                clearInterval(timerInterval);
+                clearInterval(counterInterval);
+            }
         }
     };
 
-    searchButton.addEventListener('click', performSearch);
+    searchButton.addEventListener('click', () => {
+        if (searchButton.classList.contains('cancel-mode')) {
+            abortSearch();
+        } else {
+            performSearch();
+        }
+    });
+
     searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !searchButton.classList.contains('cancel-mode')) {
             performSearch();
         }
     });
