@@ -103,7 +103,7 @@ body {
 /* Hero Section */
 .hero {
     text-align: center;
-    padding: 80px 0;
+    padding: 80px 0 40px;
     position: relative;
     overflow: hidden; /* Para garantir que o pseudo-elemento não vaze */
 }
@@ -153,7 +153,6 @@ body {
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-bottom: 40px;
     max-width: 800px;
     margin-left: auto;
     margin-right: auto;
@@ -222,6 +221,52 @@ body {
     mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>') no-repeat center / contain;
 }
 
+/* Search Filters */
+.search-filters {
+    margin: 25px auto 0;
+    max-width: 800px;
+    text-align: center;
+}
+
+.search-filters h4 {
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-bottom: 15px;
+    font-size: 1em;
+}
+
+.filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+}
+
+.filter-label input[type="checkbox"] {
+    display: none;
+}
+
+.filter-label span {
+    padding: 8px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+    background-color: var(--card-bg);
+}
+
+.filter-label input[type="checkbox"]:checked + span {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.filter-label span:hover {
+    background-color: var(--border-color);
+    transform: translateY(-2px);
+}
 
 .recent-searches {
     margin-top: 50px;
@@ -307,7 +352,7 @@ body {
     min-height: 200px;
 }
 
-.result-message, .loading-container {
+.result-message, .no-results {
     grid-column: 1 / -1; /* Ocupa todas as colunas */
     text-align: center;
     padding: 50px;
@@ -315,17 +360,21 @@ body {
     font-size: 1.2em;
 }
 
-.result-message p:first-child {
+.result-message p:first-child, .no-results p:first-child {
     margin-bottom: 15px;
     font-weight: 600;
 }
 
 /* Loading Indicator */
 .loading-container {
+    grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 50px;
+    color: var(--text-muted);
+    font-size: 1.2em;
 }
 
 .loader {
@@ -565,6 +614,14 @@ body {
 
     .search-button {
         justify-content: center;
+    }
+    
+    .filter-options {
+        gap: 10px;
+    }
+    
+    .filter-label span {
+        padding: 6px 14px;
     }
 
     .section-title, .extra-section .section-title {
