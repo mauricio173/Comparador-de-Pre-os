@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sourcesContainer = document.getElementById('sources-container');
     const comparisonSection = document.getElementById('comparison-section');
     const savedItemsSection = document.getElementById('saved-items-section');
+    const filtersContainer = document.getElementById('search-filters');
 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -202,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!resultsContainer) return;
         resultsContainer.innerHTML = ''; 
         if (!products || products.length === 0) {
-            displayMessage("Nenhum resultado encontrado. Tente refinar sua busca.");
+            displayMessage("Nenhuma oferta encontrada. Tente refinar sua busca ou selecionar outras fontes.");
         } else {
             products.forEach(product => {
                 resultsContainer.appendChild(createProductCard(product, 'search'));
@@ -300,7 +301,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
 
         try {
-            const prompt = `Você é um assistente de compras online focado em encontrar as melhores ofertas. O usuário quer comprar: "${query}". Sua tarefa é pesquisar na web e encontrar até 8 das melhores ofertas para este produto em lojas online. Apresente os resultados em um array JSON. Cada item no array deve ser um objeto representando uma oferta e deve conter as seguintes chaves, e nada mais: 'name' (nome completo do produto), 'store' (nome da loja), 'price' (preço formatado como string, ex: "R$ 1.999,00"), 'link' (URL direto para a página do produto), e 'image' (URL direto para a imagem do produto). Garanta que os links e URLs de imagem sejam válidos e diretos. Forneça apenas o array JSON na sua resposta.`;
+            const selectedSources = Array.from(filtersContainer?.querySelectorAll('input[type="checkbox"]:checked') || [])
+                                         .map(cb => (cb as HTMLInputElement).value);
+            
+            let sourcesInstruction = "Sua tarefa é pesquisar na web e encontrar até 8 das melhores ofertas para este produto em lojas online.";
+            if (selectedSources.length > 0) {
+                sourcesInstruction = `Sua tarefa é pesquisar exclusivamente em: ${selectedSources.join(', ')} e encontrar até 8 das melhores ofertas para este produto.`;
+            }
+
+            const prompt = `Você é um assistente de compras online de alta precisão, focado em encontrar as melhores e mais relevantes ofertas. O usuário quer comprar: "${query}".
+            ${sourcesInstruction}
+            É crucial que os resultados correspondam *exatamente* ao produto "${query}". Ignore completamente produtos similares, acessórios, ou itens de cores/capacidades diferentes, a menos que especificado.
+            Verifique rigorosamente se cada 'link' está ativo, funcional e leva diretamente à página de compra do produto correto, não a uma página de busca geral ou a um item esgotado. A precisão do link é a maior prioridade.
+            Apresente os resultados em um array JSON. Cada item no array deve ser um objeto representando uma oferta e deve conter as seguintes chaves, e nada mais: 'name' (nome completo do produto, que deve ser muito similar à busca), 'store' (nome da loja), 'price' (preço formatado como string, ex: "R$ 1.999,00"), 'link' (URL direto e válido para a página do produto), e 'image' (URL direto e válido para a imagem do produto).
+            Forneça apenas o array JSON na sua resposta. Se não encontrar nenhuma oferta relevante e válida, retorne um array JSON vazio [].`;
             
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
@@ -315,7 +329,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const jsonMatch = text.match(/\[[\s\S]*\]/);
             if (!jsonMatch) {
-                throw new Error("Não foi possível encontrar um JSON válido na resposta.");
+                // If no JSON is found, it could be because the model found nothing and returned text.
+                // We'll treat this as no results.
+                displayResults([]);
+                displaySources(groundingChunks);
+                return; 
             }
             
             const products = JSON.parse(jsonMatch[0]);
