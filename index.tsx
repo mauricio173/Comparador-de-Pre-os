@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -322,11 +323,21 @@ Sua tarefa: Encontrar até 8 das melhores ofertas para este produto em toda a in
 
 Regras Críticas (Siga OBRIGATORIAMENTE):
 1.  **Precisão Absoluta do Produto:** Os resultados devem corresponder *EXATAMENTE* ao produto "${query}". Ignore completamente produtos similares, acessórios, ou itens de cores/capacidades diferentes, a menos que especificado. A precisão é fundamental.
-2.  **Validação Rigorosa de Links:** A sua maior prioridade é a validade do link. Cada 'link' DEVE ser uma URL ativa, funcional, e que leve DIRETAMENTE à página de compra do produto correto. Não pode ser uma página de busca geral, uma categoria, ou um produto esgotado. Se o link estiver quebrado ou incorreto, descarte a oferta imediatamente.
+
+2.  **Validação de Link - A REGRA MAIS IMPORTANTE:** Sua responsabilidade principal é a integridade do link. Um link quebrado ou incorreto torna o resultado inútil. Siga este checklist com extremo rigor para CADA link:
+    - **Localização:** O link DEVE ser de uma loja que opera no Brasil. A URL deve, preferencialmente, terminar em ".com.br". Links que redirecionam para sites de outros países (como mercadolibre.com.ar) são INACEITÁVEIS.
+    - **Link Direto e Ativo:** O link DEVE levar diretamente para a página do produto específico. Não pode ser uma página de busca, categoria, ou a home da loja.
+    - **Estrutura Completa e Válida:** Analise a estrutura da URL. URLs com placeholders como "XXXXXXX" são inválidas.
+        - **EXEMPLO DE LINK INVÁLIDO (NÃO USE):** \`https://produto.mercadolivre.com.br/MLB-XXXXXXX-apple-iphone-15-pro-max...\` Este tipo de link é um sinal de erro e DEVE ser descartado.
+        - **EXEMPLO DE LINK VÁLIDO:** \`https://www.pontofrio.com.br/apple-iphone-15-pro-max-256gb-titanio-branco/p/55064632\`
+    - **Disponibilidade:** A página de destino não pode mostrar "Produto Esgotado" ou "Indisponível". Se estiver, descarte a oferta.
+    - **Se qualquer um destes pontos falhar, DESCARTE A OFERTA IMEDIATAMENTE.** É melhor retornar 3 resultados perfeitos do que 8 resultados com um único link duvidoso. A qualidade é mais importante que a quantidade.
+
 3.  **Obtenção da Imagem (Opcional, mas preferível):** Tente extrair uma URL direta e válida para a imagem do produto da página da oferta. A imagem deve corresponder ao produto. Se uma imagem clara e válida não puder ser encontrada, você PODE e DEVE retornar a oferta mesmo assim, mas com o valor da chave 'image' como uma string vazia (""). A falta de uma imagem NÃO é motivo para descartar uma oferta se o produto e o link estiverem corretos.
+
 4.  **Formato de Saída:** Apresente os resultados em um único array JSON. Cada item no array é um objeto de oferta e deve conter APENAS as seguintes chaves: 'name' (nome completo do produto), 'store' (nome da loja), 'price' (preço formatado como string, ex: "R$ 9.999,00"), 'link' (a URL direta e validada do produto), e 'image' (a URL da imagem ou uma string vazia).
 
-Se, após sua busca rigorosa, você não encontrar nenhuma oferta que cumpra as regras de precisão do produto e validação de link, retorne um array JSON vazio: []. Não invente resultados.`;
+Se, após sua busca rigorosa, você não encontrar nenhuma oferta que cumpra TODAS as regras acima, retorne um array JSON vazio: []. Não invente resultados.`;
             
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
