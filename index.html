@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyperscan - Comparador de Preços Futurístico</title>
+    <link rel="stylesheet" href="index.css">
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0"
+  }
+}
+</script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">Hyperscan</h1>
+            <nav class="nav">
+                <a href="#" class="nav-item active">Início</a>
+                <a href="#" class="nav-item">Explorar</a>
+                <a href="#" class="nav-item">Alertas</a>
+                <a href="#" class="nav-item">Configurações</a>
+            </nav>
+        </div>
+    </header>
+
+<main class="main-content">
+    <div class="container">
+        <section class="hero">
+            <h2 class="hero-title">Encontre o Melhor Preço. Instantaneamente.</h2>
+            <p class="hero-subtitle">Varremos a web para você. De redes sociais a marketplaces.</p>
+            <div class="search-bar">
+                <input type="text" id="product-search" placeholder="Digite o nome do produto ou cole um link..." class="search-input">
+                <button id="search-button" class="search-button">
+                    <span class="icon-scan"></span>
+                    Pesquisar
+                </button>
+            </div>
+            <div class="recent-searches">
+                <h3>Pesquisas Recentes:</h3>
+                <div class="tags" id="recent-tags">
+                    <!-- Tags will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <section class="results-section">
+            <h2 class="section-title">Resultados de Comparação</h2>
+            <div id="results-container" class="results-container">
+                <div class="no-results">
+                    <p>Sua busca trará resultados de milhares de lojas e plataformas.</p>
+                    <p>Explore as melhores ofertas em tempo real.</p>
+                </div>
+            </div>
+             <div id="sources-container" class="sources-container"></div>
+        </section>
+
+        <section id="comparison-section" class="extra-section"></section>
+        <section id="saved-items-section" class="extra-section"></section>
+
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>&copy; 2024 Hyperscan. Todos os direitos reservados.</p>
+    </div>
+</footer>
+
+<script type="module" src="index.tsx"></script>
+<script src="index.js"></script>
+</body>
+</html>
