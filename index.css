@@ -241,23 +241,49 @@ body {
     gap: 10px;
 }
 
-.tag {
+.tag-container {
+    display: flex;
+    align-items: center;
     background-color: rgba(106, 13, 173, 0.3);
-    color: var(--secondary-color);
-    padding: 8px 18px;
     border-radius: 20px;
-    font-size: 0.9em;
     border: 1px solid var(--primary-color);
-    cursor: pointer;
     transition: all 0.3s ease;
+    overflow: hidden; /* To keep rounded corners with the button */
 }
 
-.tag:hover {
+.tag-text {
+    padding: 8px 10px 8px 18px;
+    color: var(--secondary-color);
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.delete-tag-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.4em;
+    line-height: 1;
+    padding: 8px 12px 8px 8px;
+    transition: color 0.3s ease;
+}
+
+.delete-tag-btn:hover {
+    color: #ff6b6b; /* A reddish color for deletion */
+}
+
+.tag-container:hover {
     background-color: var(--primary-color);
-    color: var(--text-light);
     transform: translateY(-2px) scale(1.05);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
+
+.tag-container:hover .tag-text {
+    color: var(--text-light);
+}
+
 
 /* Results Section */
 .section-title {
@@ -281,18 +307,52 @@ body {
     min-height: 200px;
 }
 
-.result-message {
+.result-message, .loading-container {
     grid-column: 1 / -1; /* Ocupa todas as colunas */
     text-align: center;
     padding: 50px;
     color: var(--text-muted);
-    font-style: italic;
     font-size: 1.2em;
 }
 
 .result-message p:first-child {
     margin-bottom: 15px;
     font-weight: 600;
+}
+
+/* Loading Indicator */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader {
+    border: 5px solid var(--border-color);
+    border-top: 5px solid var(--secondary-color);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1.5s linear infinite;
+    margin-bottom: 25px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-stats {
+    display: flex;
+    gap: 20px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1em;
+    margin-top: 20px;
+}
+
+.loading-stats span {
+    color: var(--text-light);
 }
 
 /* Product Card */
@@ -531,10 +591,5 @@ body {
 
     .hero-subtitle {
         font-size: 1em;
-    }
-
-    .tag {
-        padding: 6px 12px;
-        font-size: 0.8em;
     }
 }
