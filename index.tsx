@@ -4,6 +4,7 @@ import { GoogleGenAI } from "@google/genai";
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('product-search') as HTMLInputElement;
     const searchButton = document.getElementById('search-button') as HTMLButtonElement;
+    const quickSearchToggle = document.getElementById('quick-search-toggle') as HTMLInputElement;
     const resultsContainer = document.getElementById('results-container');
     const recentTagsContainer = document.getElementById('recent-tags');
     const sourcesContainer = document.getElementById('sources-container');
@@ -315,7 +316,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
 
         try {
-            const prompt = `Você é um assistente de compras online de altíssima precisão. Sua missão é encontrar as melhores ofertas na internet para o produto que o usuário deseja.
+            const isQuickSearch = quickSearchToggle.checked;
+
+            const detailedPrompt = `Você é um assistente de compras online de altíssima precisão. Sua missão é encontrar as melhores ofertas na internet para o produto que o usuário deseja.
 
 Usuário quer comprar: "${query}"
 
@@ -338,6 +341,20 @@ Regras Críticas (Siga OBRIGATORIAMENTE):
 4.  **Formato de Saída:** Apresente os resultados em um único array JSON. Cada item no array é um objeto de oferta e deve conter APENAS as seguintes chaves: 'name' (nome completo do produto), 'store' (nome da loja), 'price' (preço formatado como string, ex: "R$ 9.999,00"), 'link' (a URL direta e validada do produto), e 'image' (a URL da imagem ou uma string vazia).
 
 Se, após sua busca rigorosa, você não encontrar nenhuma oferta que cumpra TODAS as regras acima, retorne um array JSON vazio: []. Não invente resultados.`;
+
+            const quickPrompt = `Você é um assistente de compras focado em velocidade. Sua tarefa é encontrar rapidamente ofertas para o produto "${query}" usando a busca.
+Priorize a quantidade de resultados e a velocidade, mesmo que a precisão não seja perfeita.
+
+Sua tarefa: Encontrar até 8 ofertas para "${query}".
+
+Regras:
+1. **Busca Rápida:** Use a busca para encontrar páginas de produtos que pareçam corresponder à consulta.
+2. **Extração de Dados:** De cada página, extraia o nome do produto, nome da loja, preço, o link direto e uma URL de imagem.
+3. **Formato de Saída OBRIGATÓRIO:** Retorne os resultados como um array JSON. Cada objeto deve conter as chaves: 'name', 'store', 'price', 'link', 'image'.
+
+Se não encontrar nada, retorne um array JSON vazio: [].`;
+
+            const prompt = isQuickSearch ? quickPrompt : detailedPrompt;
             
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
@@ -399,4 +416,3 @@ Se, após sua busca rigorosa, você não encontrar nenhuma oferta que cumpra TOD
     renderComparisonList();
     renderSavedList();
 });
-
